@@ -137,6 +137,18 @@ padding-bottom: 56.25%;
 <p>Florida Weather Monitoring & Radar Center</p>
 </header>
 
+<!-- LIVE SEVERE WEATHER ALERTS -->
+<section id="weather-alert-center" style="background:#121d28; border:2px solid #ff8c00; border-radius:10px; margin:20px; padding:18px; text-align:center;">
+<h2 style="margin:0 0 8px 0;">🚨 LIVE SEVERE WEATHER ALERTS</h2>
+<p style="margin:0 0 12px 0; color:#b9c4ce;">
+Tornado • Severe Thunderstorm • Flash Flood • Marine Warnings
+</p>
+
+<div id="weather-alerts" style="font-size:16px;">
+Checking official National Weather Service alerts...
+</div>
+</section>
+
 <div class="status">
 ⚡ WEATHER MONITORING CENTER • FLORIDA
 </div>
@@ -267,6 +279,84 @@ St. Augustine • Atlantic Ocean
 American Recon Weather Unit<br>
 Weather Awareness • Monitoring • Preparedness
 </footer>
+
+<script>
+async function loadWeatherAlerts() {
+const alertBox = document.getElementById("weather-alerts");
+
+try {
+const response = await fetch(
+"https://api.weather.gov/alerts/active?area=FL"
+);
+
+if (!response.ok) {
+throw new Error("Weather service unavailable");
+}
+
+const data = await response.json();
+
+const importantAlerts = data.features.filter(item => {
+const event = item.properties.event || "";
+
+return (
+event.includes("Tornado") ||
+event.includes("Severe Thunderstorm") ||
+event.includes("Flash Flood") ||
+event.includes("Marine")
+);
+});
+
+alertBox.innerHTML = "";
+
+if (importantAlerts.length === 0) {
+alertBox.innerHTML =
+"<strong>✅ NO ACTIVE SEVERE WEATHER WARNINGS FOR FLORIDA</strong>";
+return;
+}
+
+importantAlerts.forEach(item => {
+const alert = item.properties;
+
+const card = document.createElement("div");
+card.style.background = "#2b1010";
+card.style.border = "2px solid #ff3b30";
+card.style.borderRadius = "8px";
+card.style.padding = "12px";
+card.style.margin = "10px 0";
+
+const title = document.createElement("strong");
+title.textContent = "⚠️ " + alert.event;
+
+const area = document.createElement("div");
+area.textContent = alert.areaDesc || "Florida";
+
+const expires = document.createElement("div");
+
+if (alert.expires) {
+const time = new Date(alert.expires);
+expires.textContent =
+"Expires: " + time.toLocaleString();
+}
+
+card.appendChild(title);
+card.appendChild(document.createElement("br"));
+card.appendChild(area);
+card.appendChild(expires);
+
+alertBox.appendChild(card);
+});
+
+} catch (error) {
+alertBox.innerHTML =
+"⚠️ Unable to retrieve National Weather Service alerts right now.";
+}
+}
+
+loadWeatherAlerts();
+
+/* Refresh alerts automatically every 5 minutes */
+setInterval(loadWeatherAlerts, 300000);
+</script>
 
 </body>
 </html>
